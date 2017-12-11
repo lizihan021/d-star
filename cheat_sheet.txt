@@ -1,0 +1,38 @@
+Lifelong Planning A* (LPA*):
+    S denotes the finite set of vertices of the graph
+
+    Notation:
+        Succ(s) \subset of S is the set of successors of vertex s \in S
+        Pred(s) \subset of S is the set of predecesors of vertex S \in S
+
+    0 < c(s,s') <= \inf
+        c(s,s') is the cost of moving from vertex s to s', where s' \in Succ(s)
+
+    g*(s) is the length of the shortest path from s_{start} to s
+
+    h(s,s_{goal}) is a heuristic approximating the goal distances of vertices s
+        must obey...
+            h(s_{goal},s_{goal})=0
+            h(s,s_{goal}) <= c(s,s') + h(s',s_{goal}) for all vertices s \in S and s' \in Succ(s) with s != s_{goal}
+
+    PQ Behaviour:
+        - U.Top() returns vertex with smallest priority
+        - U.TopKey() returns the smallest priority of all vertices
+            *If U is empty, then U.TopKey() returns [\ing; \ing]
+        - U.Pop() deletes the vertex with the smallest priority and returns it
+        - U.Insert(s,k) inserts vertex s with priority k
+        - U.Update(s,k) changes the priority of vertex s in the pq to k
+        - U.Remove(s) removes vertex s from priority queue
+    Variables:
+        Each vertex s:
+            - Maintain estimate g(s) of the start distance g*(s)
+                * Corresponds to g-values of A*
+                    Note: (A*)f(n) = g(n) + h(n)
+                        - f(n) = estimated total weight
+                        - g(n) = cost of the path fro mthe start node to n
+                        - h(n) = estimate of cheapest path from n to goal
+            - rhs-values: one-step lookahead values based on g-values
+                rhs(s) =...
+                    - 0 if s = s_{start}
+                        - min_{s' \in Pred(s)} g(s') + c(s',s)
+            - locally consistent: a vertex's g-value equals its rhs-values
