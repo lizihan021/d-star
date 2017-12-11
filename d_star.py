@@ -10,7 +10,7 @@ def Initialize():
     for i in range(10): # TODO: Set this condition. for all s in S rhs(s) = g(s) = infinity
         print 'A'
     rhs(s_goal) = 0
-    U.insert(s_goal, calculateKey(s_goal)
+    U.insert(s_goal, calculateKey(s_goal))
 
 def updateVertex(u): #TODO: Do this LOL
     print 'A'
