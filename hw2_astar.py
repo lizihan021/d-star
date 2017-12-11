@@ -4,8 +4,8 @@ import time
 import openravepy
 
 #### YOUR IMPORTS GO HERE ####
-from Queue import PriorityQueue
-from pq import Node
+from pq import Priority_queue
+from grid import Node, Grid
 import math
 #### END OF YOUR IMPORTS ####
 

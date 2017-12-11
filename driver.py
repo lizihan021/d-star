@@ -6,8 +6,8 @@ import time
 import openravepy
 
 #### YOUR IMPORTS GO HERE ####
-from Queue import PriorityQueue
-from pq import Node
+from pq import Priority_queue
+from grid import Node, Grid
 import math
 #### END OF YOUR IMPORTS ####
 
@@ -28,10 +28,8 @@ def tuckarms(env,robot):
         robot.GetController().SetDesired(robot.GetDOFValues());
     waitrobot(robot)
 
-
 def ConvertPathToTrajectory(robot,path=[]):
 #Path should be of the form path = [q_1, q_2, q_3,...], where q_i = [x_i, y_i, theta_i]
-
     if not path:
 	return None
     # Initialize trajectory
@@ -45,13 +43,10 @@ def ConvertPathToTrajectory(robot,path=[]):
 
 
 if __name__ == "__main__":
-
     env = Environment()
     env.SetViewer('qtcoin')
     collisionChecker = RaveCreateCollisionChecker(env,'ode')
     env.SetCollisionChecker(collisionChecker)
-
-
     env.Reset()
     # load a scene from ProjectRoom environment XML file
     env.Load('data/pr2test2.env.xml')
@@ -64,7 +59,6 @@ if __name__ == "__main__":
     # tuck in the PR2's arms for driving
     tuckarms(env,robot);
 
-
     with env:
         # the active DOF are translation in X and Y and rotation about the Z axis of the base of the robot.
         robot.SetActiveDOFs([],DOFAffine.X|DOFAffine.Y|DOFAffine.RotationAxis,[0,0,1])
@@ -73,24 +67,10 @@ if __name__ == "__main__":
 	start = time.clock()
 
         #### YOUR CODE HERE ####
-        handles = []
+        
+		handles = []
         o_pose = robot.GetTransform()
         startconfig = [o_pose[0][3], o_pose[1][3], 0]
-        step_len = 0.1
-        x_grid_len = 3.7
-        y_grid_len = 1.7
-        x_grid_num = int(2*x_grid_len/step_len)
-        y_grid_num = int(2*y_grid_len/step_len)
-        theta_num = 4
-        grid = []
-        for i in range(x_grid_num):
-            line = []
-            for j in range(y_grid_num):
-                line.append([ Node(-3.7+i*step_len,-1.7+j*step_len, pi-2*pi/theta_num*k, (i,j,k), (-1,-1,-1),0) for k in range(theta_num)])
-            grid.append(line)
-        start_p = [int(round((startconfig[0]+3.7)/step_len)), int(round((startconfig[1]+1.7)/step_len)), theta_num/2]
-        end_p = [int(round((goalconfig[0]+3.7)/step_len)), int(round((goalconfig[1]+1.7)/step_len)), 3*theta_num/4]
-
 
  	path = [] #put your final path in this variable
 

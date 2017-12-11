@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-class priority_queue:
+class PriorityQueue:
 	def __init__(self, compare = lambda x, y: (x[0] < y[0]), arr = []):
 		# [key, value]
 		self.pq = [[-1, -1]] + arr
