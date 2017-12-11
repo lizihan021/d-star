@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 
 class priority_queue:
 	def __init__(self, compare = lambda x, y: (x[0] < y[0]), arr = []):
@@ -64,6 +65,6 @@ class priority_queue:
 	def size(self):
 		return len(self.pq) - 1
 
-	def Print(self):
-		print self.pq
+	def __str__(self):
+		return self.pq.__str__()
 
