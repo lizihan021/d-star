@@ -12,7 +12,7 @@ def keyCompare(lhs,rhs):
         return False
 
 def heuristic(s1,s2):
-    return 0
+    return np.sqrt((s1.x - s2.x) ** 2 + (s1.y - s2.y) ** 2 + np.min((np.abs(s1.theta - s2.theta), 2 * np.pi - np.abs(s1.theta - s2.theta))) ** 2)
 
 def calculateRhs(s):
     return 0
@@ -21,21 +21,21 @@ def calculateG(s):
     return 0
 
 def cost_plus_g(s1, s2):
-    return np.sqrt((s1.x - s2.x) ** 2 + (s1.y - s2.y) ** 2 + np.min((np.abs(s1.theta - s2.theta), 2 * np.pi - np.abs(s1.theta - s2.theta))) ** 2)
+    return heuristic(s1,s2) + calculateG(s1)
 
 def calculateKey(s):
     return 0 # TODO: Set this up
 
-def Initialize():
+def initialize():
     U = pq.Priority_queue
     k_m = 0
     for i in range(10): # TODO: Set this condition. for all s in S rhs(s) = g(s) = infinity
     rhs(s_goal) = 0
     U.push(s_goal, calculateKey(s_goal))
-    return U, k_m
         print 'A'
     rhs(s_goal) = 0
     U.insert(s_goal, calculateKey(s_goal))
+    return U
 
 def updateVertex(u): #TODO: Do this LOL
     print 'A'
