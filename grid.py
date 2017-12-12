@@ -44,8 +44,8 @@ class Grid:
             for j in range(self.y_grid_num):
                 line.append([ Node(-self.x_len+i*self.step_len,-self.y_len+j*self.step_len, np.pi-2*np.pi/self.theta_num*k, (i,j,k), (-1,-1,-1), np.inf, np.inf ) for k in range(self.theta_num)])
             self.grid.append(line)
-        self.start_p = self.config_point(startconfig)
-        self.goal_p = self.config_point(goalconfig)
+        self.s_start = self.config_point(startconfig)
+        self.s_goal = self.config_point(goalconfig)
 
     def angle_index(self, angle):
         return (angle + np.pi/2*3)/np.pi*2

@@ -45,6 +45,7 @@ def ConvertPathToTrajectory(robot,path=[]):
 ### Some global variable ###
 k_m = 0
 U = 0
+grid = 0
 
 if __name__ == "__main__":
     env = Environment()
@@ -78,18 +79,18 @@ if __name__ == "__main__":
         grid = Grid(startconfig, goalconfig)
 
         ### Main ###
-        s_last = grid.start_p
+        s_last = grid.s_start
         changed_flag = False
         U, k_m = initialize()
         some_path = computeShortestPath()
         while True:
-            grid.start_p = grid.start_p.succ()[argmin([c_plus_g(grid.start_p, suc) for suc in grid.start_p.succ()])]
+            grid.s_start = grid.s_start.succ()[argmin([cost_plus_g(grid.s_start, suc) for suc in grid.s_start.succ()])]
             ### maybe ###
-            robot.SetActiveDOFValues([grid.start_p.x, grid.start_p.y, grid.start_p.theta])
+            robot.SetActiveDOFValues([grid.s_start.x, grid.s_start.y, grid.s_start.theta])
             if changed_flag:
                 # if there is edge value changed:
-                k_m += h(s_last, grid.start_p)
-                s_last = grid.start_p
+                k_m += h(s_last, grid.s_start)
+                s_last = grid.s_start
                 some_path = computeShortestPath()
                 changed_flag = False
 
