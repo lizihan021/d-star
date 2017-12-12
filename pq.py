@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
-class PriorityQueue:
+#### pq requires items pushed in to be unique. ###
+class Priority_queue:
 	def __init__(self, compare = lambda x, y: (x[0] < y[0]), arr = []):
 		# [key, value]
 		self.pq = [[-1, -1]] + arr
@@ -30,10 +31,18 @@ class PriorityQueue:
 		self.fix_up(self.size())
 
 	def update(self, item, new_key):
-		idx = self.pq.index([self.dict[item], item])
+		idx = self.pq.index([self.dic[item], item])
 		self.pq[idx][0] = new_key
 		self.dict[item] = new_key
 		self.fix_down(self.fix_up(idx))
+
+	def delete(self, item):
+		idx = self.pq.index([self.dic[item], item])
+		self.pq[idx], self.pq[-1] = self.pq[-1], self.pq[idx]
+		victem = self.pq.pop()
+		self.dic.pop(victem[1], "dict value error")
+		self.fix_down(idx)
+		return victem
 
 	def fix_up(self, i):
 		current = i
@@ -68,3 +77,19 @@ class PriorityQueue:
 	def __str__(self):
 		return self.pq.__str__()
 
+# if __name__ == "__main__":
+# 	pq = Priority_queue()
+# 	pq.push("item", 1)
+# 	pq.push("item2", 2)
+# 	pq.push("item3", 7)
+# 	pq.push("item4", 6)
+# 	pq.push("item4", 6)
+# 	pq.push("item4", 6)
+# 	pq.push("item4", 6)
+# 	pq.push("item5", 4)
+# 	pq.push("item6", 9)
+# 	pq.pop()
+# 	pq.pop()
+# 	pq.delete("item")
+# 	pq.delete("item5")
+# 	print pq

@@ -71,6 +71,7 @@ if __name__ == "__main__":
 		handles = []
         o_pose = robot.GetTransform()
         startconfig = [o_pose[0][3], o_pose[1][3], 0]
+        grid = Grid(startconfig, goalconfig)
 
  	path = [] #put your final path in this variable
 

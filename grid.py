@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #defines a basic node class
-from numpy import *
+from numpy import pi
 
 class Node:
     def __init__(self,x_in,y_in,theta_in, id_in, parentid_in, cost_in):
