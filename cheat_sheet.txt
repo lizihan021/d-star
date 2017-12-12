@@ -34,5 +34,20 @@ Lifelong Planning A* (LPA*):
             - rhs-values: one-step lookahead values based on g-values
                 rhs(s) =...
                     - 0 if s = s_{start}
-                        - min_{s' \in Pred(s)} g(s') + c(s',s)
+                    - min_{s' \in Pred(s)} g(s') + c(s',s)
             - locally consistent: a vertex's g-value equals its rhs-values
+    Priority Queue: Always contains the locally inconsistent vertices
+        - Vertices whose g-values LPA* Potentially needs to update to make them locally consistent
+        - Priority of a vertex is always the same as its key
+            * For a vector s, the key is:
+                - k(s) = [k_1(s); k_2(s)]
+                    * k_1(s) = min(g(s),rhs(s)) + h(s,s_{goal})
+                        - Corresponds directly to f-values f(s) = g*(s) + h(s,s_{goal}) used by A*
+                    * k_2(s) = min(g(s),rhs(s))
+                        - Corresponds to g-values of A*
+            * Keys are compared according to a lexicographic ordering
+                - i.e - k(s) <= k(s') iff k_1(s) < k_1(s') or k_1(s) == k_1(s') and k_2(s) <= k_2(s')
+
+D* Lite:
+    Reverse Search Direction: D* Lite searches from the goal vertex to the start vertex, so it's g-values are estimates of the goal distances
+        - Derived from LPA* by exchanging the start and goal vertex and reversing all edges in the pseudo code

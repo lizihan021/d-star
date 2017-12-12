@@ -1,6 +1,14 @@
 
 #!/usr/bin/env python
 
+def keyCompare(lhs,rhs):
+    if lhs[0] < rhs[0]:
+        return True
+    elif lhs[0] == rhs[0]:
+        return lhs[1] < rhs[1]
+    else:
+        return False
+
 def calculateKey(s):
     return 0 # TODO: Set this up
 
