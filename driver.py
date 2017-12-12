@@ -6,6 +6,7 @@ import time
 import openravepy
 
 #### YOUR IMPORTS GO HERE ####
+from d_star import *
 from pq import Priority_queue
 from grid import Node, Grid
 import math
@@ -31,16 +32,19 @@ def tuckarms(env,robot):
 def ConvertPathToTrajectory(robot,path=[]):
 #Path should be of the form path = [q_1, q_2, q_3,...], where q_i = [x_i, y_i, theta_i]
     if not path:
-	return None
+        return None
     # Initialize trajectory
-    traj = RaveCreateTrajectory(env,'')	
+    traj = RaveCreateTrajectory(env,'')    
     traj.Init(robot.GetActiveConfigurationSpecification())
     for i in range(0,len(path)):
-	traj.Insert(i,numpy.array(path[i]))
+        traj.Insert(i,numpy.array(path[i]))
     # Move Robot Through Trajectory
     planningutils.RetimeAffineTrajectory(traj,maxvelocities=ones(3),maxaccelerations=5*ones(3))
     return traj
 
+### Some global variable ###
+k_m = 0
+U = 0
 
 if __name__ == "__main__":
     env = Environment()
@@ -64,27 +68,44 @@ if __name__ == "__main__":
         robot.SetActiveDOFs([],DOFAffine.X|DOFAffine.Y|DOFAffine.RotationAxis,[0,0,1])
 
         goalconfig = [2.6,-1.3,-pi/2]
-	start = time.clock()
+        start = time.clock()
 
-        #### YOUR CODE HERE ####
+        #### D* Lite Implementation ####
         
-		handles = []
+        handles = []
         o_pose = robot.GetTransform()
         startconfig = [o_pose[0][3], o_pose[1][3], 0]
         grid = Grid(startconfig, goalconfig)
 
- 	path = [] #put your final path in this variable
+        ### Main ###
+        s_last = grid.start_p
+        changed_flag = False
+        U, k_m = initialize()
+        some_path = computeShortestPath()
+        while True:
+            grid.start_p = grid.start_p.succ()[argmin([c_plus_g(grid.start_p, suc) for suc in grid.start_p.succ()])]
+            ### maybe ###
+            robot.SetActiveDOFValues([grid.start_p.x, grid.start_p.y, grid.start_p.theta])
+            if changed_flag:
+                # if there is edge value changed:
+                k_m += h(s_last, grid.start_p)
+                s_last = grid.start_p
+                some_path = computeShortestPath()
+                changed_flag = False
 
- 	#### END OF YOUR CODE ###
-	end = time.clock()
-	print "Time: ", end - start
+
+        path = [] #put your final path in this variable
+
+     #### End D* Lite Implementatio  ###
+    end = time.clock()
+    print "Time: ", end - start
 
         # Now that you have computed a path, convert it to an openrave trajectory 
-	traj = ConvertPathToTrajectory(robot, path)
+    traj = ConvertPathToTrajectory(robot, path)
 
-	# Execute the trajectory on the robot.
-	if traj != None:
-	    robot.GetController().SetPath(traj)
+    # Execute the trajectory on the robot.
+    if traj != None:
+        robot.GetController().SetPath(traj)
 
 
     waitrobot(robot)
