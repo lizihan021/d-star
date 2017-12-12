@@ -9,6 +9,15 @@ def keyCompare(lhs,rhs):
     else:
         return False
 
+def heuristic(s1,s2):
+    return 0
+
+def calculateRhs(s):
+    return 0
+
+def calculateG(s):
+    return 0
+
 def calculateKey(s):
     return 0 # TODO: Set this up
 
