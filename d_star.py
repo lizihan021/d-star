@@ -26,11 +26,11 @@ def calculateKey(s, grid, k_m): ### maybe change grid and k_m to global ###
 	return [min([s.g, s.rhs])+h(grid.s_start, s)+k_m, min([s.g, s.rhs])]
 
 def initialize(s_goal):
-    U = pq.Priority_queue
+    U = pq.Priority_Queue
     k_m = 0
     s_goal.rhs = 0
-    U.insert(s_goal, calculateKey(s_goal))
-    return U
+    U.Insert(s_goal, calculateKey(s_goal))
+    return U, k_m
 
 def updateVertex(u, grid): 
 	if (u != grid.s_goal):
@@ -45,7 +45,7 @@ def computeShortestPath(U, grid):
 		k_old = U.top()[0]
 		u = U.pop()
 		if keyCompare(k_old, calculateKey(u)):
-			U.push(u, calculateKey(u))
+			U.Insert(u, calculateKey(u))
 		elif u.g > u.rhs:
 			u.g = u.rhs
 			for s in u.pred():

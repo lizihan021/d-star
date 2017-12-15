@@ -42,7 +42,11 @@ def ConvertPathToTrajectory(robot,path=[]):
     planningutils.RetimeAffineTrajectory(traj,maxvelocities=ones(3),maxaccelerations=5*ones(3))
     return traj
 
-### Some global variable ###
+####################
+#                  #
+# Global Variables #
+#                  #
+####################
 k_m = 0
 U = 0
 grid = 0
@@ -70,21 +74,28 @@ if __name__ == "__main__":
 
         goalconfig = [2.6,-1.3,-pi/2]
         start = time.clock()
-
-        #### D* Lite Implementation ####
+        ##########################
+        #                        #
+        # D* Lite Implementation #
+        #                        #
+        ##########################
         
         handles = []
         o_pose = robot.GetTransform()
         startconfig = [o_pose[0][3], o_pose[1][3], 0]
         grid = Grid(startconfig, goalconfig)
 
-        ### Main ###
+        ##############
+        #            #
+        #    Main    #
+        #            #
+        ##############
         s_last = grid.s_start
         changed_flag = False
         U, k_m = initialize()
-        some_path = computeShortestPath()
-        while True:
-            grid.s_start = grid.s_start.succ()[argmin([cost_plus_g(grid.s_start, suc) for suc in grid.s_start.succ()])]
+        computeShortestPath()
+        while np.linalg.norm(np.array(grid.s_start) - np.array(grid.s_goal)) != 0:
+            grid.s_start = grid.s_start.succ()[np.argmin([cost_plus_g(grid.s_start, suc) for suc in grid.s_start.succ()])]
             ### maybe ###
             robot.SetActiveDOFValues([grid.s_start.x, grid.s_start.y, grid.s_start.theta])
             if changed_flag:

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 #### pq requires items pushed in to be unique. ###
-class Priority_queue:
+class Priority_Queue:
 	def __init__(self, compare = lambda x, y: (x[0] < y[0]), arr = []):
 		# [key, value]
 		self.pq = [[-1, -1]] + arr
@@ -11,32 +11,32 @@ class Priority_queue:
 			for i in range(len(self.pq)//2)[:0:-1]:
 				fix_down(i)
 
-	def top(self):
+	def Top(self):
 		if self.empty():
 			raise ValueError("Cannot get top(), Queue is empty.")
 		return self.pq[0][0]
 
-	def pop(self):
+	def Pop(self):
 		if self.empty():
 			raise ValueError("Cannot get top(), Queue is empty.")
 		self.pq[1], self.pq[-1] = self.pq[-1], self.pq[1]
-		victem = self.pq.pop()
+		victim = self.pq.pop()
 		self.dic.pop(victem[1], "dict value error")
 		self.fix_down(1)
-		return victem
+		return victim
 
-	def push(self, item, key):
+	def Insert(self, item, key):
 		self.pq.append([key, item])
 		self.dic[item] = key
 		self.fix_up(self.size())
 
-	def update(self, item, new_key):
+	def Update(self, item, new_key):
 		idx = self.pq.index([self.dic[item], item])
 		self.pq[idx][0] = new_key
 		self.dict[item] = new_key
 		self.fix_down(self.fix_up(idx))
 
-	def delete(self, item):
+	def Remove(self, item):
 		idx = self.pq.index([self.dic[item], item])
 		self.pq[idx], self.pq[-1] = self.pq[-1], self.pq[idx]
 		victem = self.pq.pop()
