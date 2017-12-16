@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 
-from graph import Node
+from graph import *
 import numpy as np
 
 def scanEdges(robot, env, node):
 	changedEdges = False
 	for neighbor in node.getNeighbors():
 		config = coord_translator.coordToConfig(neighbor)
-	    robot.SetActiveDOFValues(config)
+		robot.SetActiveDOFValues(config)
 		if env.CheckCollision(robot) and graph.getCost(node.getCoordinates(), neighbor) != np.inf: 
 			changedEdges = True
 			for collNeighbor in graph.getNode(neighbor).getNeighbors():
@@ -42,11 +42,6 @@ def pqComparator(lhs,rhs):
 ###  ###
 def heuristic(s1,s2):
     return np.sqrt((s1.x - s2.x) ** 2 + (s1.y - s2.y) ** 2 + np.min((np.abs(s1.rot - s2.rot), 2 * np.pi - np.abs(s1.rot - s2.rot))) ** 2)
-
-def cost(c1,c2): # TODO: Do we have to check for collisions here?
-	s1 = coord_translator.coordToConfig(c1)
-	s2 = coord_translator.coordToConfig(c2)
-    return np.sqrt((s1[0] - s2[0]) ** 2 + (s1[1] - s2[1]) ** 2 + np.min((np.abs(s1[2] - s2[2], 2 * np.pi - np.abs(s1[2] - s2[2]))) ** 2))
 
 def cost_plus_g(c1, c2):
     return graph.getCost(c1, c2) + graph.getNode(c2).g

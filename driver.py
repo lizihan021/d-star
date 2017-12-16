@@ -1,20 +1,109 @@
 #!/usr/bin/env python
 
-from pq import priority_queue
-
 import time
 import openravepy
 
 #### YOUR IMPORTS GO HERE ####
-from d_star import *
 from pq import Priority_Queue
-from graph, import Node, CoorinateTranslator, Graph
+from graph import *
 import math
 #### END OF YOUR IMPORTS ####
 
 if not __openravepy_build_doc__:
     from openravepy import *
     from numpy import *
+
+#########################
+# D Star Implementation #
+#########################
+def scanEdges(robot, env, node):
+    changedEdges = False
+    for neighbor in node.getNeighbors():
+        config = coord_translator.coordToConfig(neighbor)
+        robot.SetActiveDOFValues(config)
+        if env.CheckCollision(robot) and graph.getCost(node.getCoordinates(), neighbor) != np.inf: 
+            changedEdges = True
+            for collNeighbor in graph.getNode(neighbor).getNeighbors():
+                graph.setCost(collNeighbor, neighbor, np.inf)
+                updateVertex(collNeighbor)
+
+        if not env.CheckCollision(robot) and graph.getCost(node.getCoordinates(), neighbor) == np.inf:
+            changedEdges = True
+            for nonCollNeighbor in graph.getNode(neighbor).getNeighbors():
+                graph.setCost(nonCollNeighbor, neighbor, cost(coord_translator, graph.getNode(nonCollNeighbor), graph.getNode(neighbor)))
+                updateVertex(nonCollNeighbor)
+    return changedEdges
+
+
+def keyCompare(lhs,rhs):
+    if lhs[0] < rhs[0]:
+        return True
+    elif lhs[0] == rhs[0]:
+        return lhs[1] < rhs[1]
+    else:
+        return False
+
+def pqComparator(lhs,rhs):
+    if lhs[0][0] > rhs[0][0]:
+        return True
+    elif lhs[0][0] == rhs[0][0]:
+        return lhs[0][1] > rhs[0][1]
+    else:
+        return False
+
+def heuristic(c1,c2):
+    s1 = coord_translator.coordToConfig(c1)
+    s2 = coord_translator.coordToConfig(c2)
+    return np.sqrt( (s1[0] - s2[0]) ** 2 + (s1[1] - s2[1]) ** 2 +  np.min([np.abs(s1[2] - s2[2]), 2 * np.pi - np.abs(s1[2] - s2[2])]) ** 2)
+
+def cost_plus_g(c1, c2):
+    return graph.getCost(c1, c2) + graph.getNode(c2).g
+
+def calculateKey(s): ### maybe change grid and k_m to global ###
+    return [min([s.g, s.rhs]) + heuristic(graph.s_start.getCoordinates(), s.getCoordinates()) + k_m, min([s.g, s.rhs])]
+
+def initialize(s_goal):
+    U = Priority_Queue(compare=pqComparator)
+    k_m = 0
+    s_goal.rhs = 0
+    U.Insert(s_goal, calculateKey(s_goal))
+    return U, k_m
+
+def updateVertex(u_coord):
+    if not graph.findNode(u_coord):
+        tmp = Node(u_coord, np.inf, np.inf)
+        graph.insertNode(tmp, coord_translator)
+    for neighbor in graph.getNode(u_coord).getNeighbors():
+        if not graph.findNode(neighbor):
+            tmp = Node(neighbor, np.inf, np.inf)
+            graph.insertNode(tmp, coord_translator)
+    u = graph.getNode(u_coord)
+    if (u_coord != graph.s_goal.getCoordinates()):
+        u.rhs = min([ cost_plus_g(u_coord, neighbor) for neighbor in u.getNeighbors()])
+    if U.exist(u):
+        U.Remove(u)
+    if u.g != u.rhs:
+        U.Insert(u, calculateKey(u))
+
+def computeShortestPath():
+    while keyCompare(U.Top()[0], calculateKey(graph.s_start)) or graph.s_start.rhs != graph.s_start.g:
+        k_old = U.Top()[0]
+        u = U.Pop()[1]
+        if keyCompare(k_old, calculateKey(u)):
+            U.Insert(u, calculateKey(u))
+        elif u.g > u.rhs:
+            u.g = u.rhs
+            for s in u.getNeighbors():
+                updateVertex(s)
+        else:
+            u.g = np.inf
+            updateVertex(u)
+            for s in u.getNeighbors():
+                updateVertex(s)
+
+#############################
+# End D Star Implementation #
+#############################
 
 def waitrobot(robot):
     """busy wait for robot completion"""
@@ -42,11 +131,7 @@ def ConvertPathToTrajectory(robot,path=[]):
     planningutils.RetimeAffineTrajectory(traj,maxvelocities=ones(3),maxaccelerations=5*ones(3))
     return traj
 
-####################
-#                  #
-# Global Variables #
-#                  #
-####################
+
 U = 0
 k_m = 0
 graph = 0
@@ -83,11 +168,14 @@ if __name__ == "__main__":
         # D* Lite Implementation #
         #                        #
         ##########################
-        s_start = Node(start_config, np.inf, np.inf)
-        s_goal = Node(goal_config, np.inf, np.inf)
-        graph = Graph(s_start, s_goal)
-        graph.insertNode(s_goal)
+        print start_config
         coord_translator = CoordinateTranslator(goal_config)
+        s_start = Node(coord_translator.configToCoord(start_config), np.inf, np.inf)
+        print s_start.getCoordinates()
+        s_goal = Node([0,0,0], np.inf, np.inf)
+        graph = Graph(s_start, s_goal)
+        graph.insertNode(s_goal, coord_translator)
+
 
         ##############
         #            #
@@ -98,8 +186,9 @@ if __name__ == "__main__":
         U, k_m = initialize(s_goal)
         computeShortestPath()
         while np.linalg.norm(np.array(graph.s_start) - np.array(graph.s_goal)) != 0:
-            graph.s_start = graph.s_start.succ()[np.argmin([cost_plus_g(graph.s_start, suc) for suc in graph.s_start.succ()])]
+            graph.s_start = graph.getNode(np.argmin([cost_plus_g(graph.s_start.getCoordinates(), neighbor) for neighbor in graph.s_start.getNeighbors()]))
             ### maybe ###
+            print [graph.s_start.x, graph.s_start.y, graph.s_start.theta]
             robot.SetActiveDOFValues([graph.s_start.x, graph.s_start.y, graph.s_start.theta])
             if scanEdges(robot, env, graph.s_start):
                 # if there is edge value changed:

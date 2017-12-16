@@ -21,7 +21,7 @@ class Priority_Queue:
 			raise ValueError("Cannot get top(), Queue is empty.")
 		self.pq[1], self.pq[-1] = self.pq[-1], self.pq[1]
 		victim = self.pq.pop()
-		self.dic.pop(victem[1], "dict value error")
+		self.dic.pop(victim[1], "dict value error")
 		self.fix_down(1)
 		return victim
 

@@ -1,17 +1,21 @@
 #!/usr/bin/env python
 #defines a basic node class
 import numpy as np
-from d_star import cost
+
+def cost(coord_translator, c1,c2): # TODO: Do we have to check for collisions here?
+    s1 = coord_translator.coordToConfig(c1)
+    s2 = coord_translator.coordToConfig(c2)
+    return np.sqrt( (s1[0] - s2[0]) ** 2 + (s1[1] - s2[1]) ** 2 +  np.min([np.abs(s1[2] - s2[2]), 2 * np.pi - np.abs(s1[2] - s2[2])]) ** 2)
 
 class CoordinateTranslator:
     def __init__(self, goal_config_in):
         self.goal_config = goal_config_in
     
     def coordToConfig(self, coord):
-        return [goal_config[0] + coord[0], goal_config[1] + coord[1], goal_config[2] + coord[2] * 0.5 * np.pi]
+        return [self.goal_config[0] + 0.1 * coord[0], self.goal_config[1] + 0.1 * coord[1], self.goal_config[2] + coord[2] * 0.5 * np.pi]
 
     def configToCoord(self, config):
-        return [config[0] - goal_config[0], config[1] - goal_config[1], np.around((config[2] - goal_config[2]) / (0.5 * np.pi))]
+        return [np.around((config[0] - self.goal_config[0]) * 10), np.around((config[1] - self.goal_config[1]) * 10), np.around((config[2] - self.goal_config[2]) / (0.5 * np.pi)) % 4]
 
 class Node:
     def __init__(self, coord_in, g_in, rhs_in):
@@ -30,7 +34,7 @@ class Node:
             for j in range(-1,2):
                 for k in range(-1,2):
                     if np.linalg.norm([i,j,k]) != 0:
-                        children.append([self.x + i, self.y + j, self.rot + k])
+                        neighbors.append([self.x + i, self.y + j, (self.rot + k) % 4])
         return neighbors
 
     def printme(self):
@@ -44,20 +48,20 @@ class Graph:
         self.nodes = {}
         self.cost = {}
 
-    def insertNode(self, node):
+    def insertNode(self, node, coord_translator):
         self.setNode(node)
         for neighbor in node.getNeighbors():
             if not self.findCost(neighbor, node.getCoordinates()):
-                graph.setCost(node.getCoordinates(), neighbor, cost(node.getCoordinates(), neighbor))
+                self.setCost(node.getCoordinates(), neighbor, cost(coord_translator, node.getCoordinates(), neighbor))
 
     def setNode(self, node):
         coord = node.getCoordinates()
-        self.node[(coord[0], coord[1], coord[2])] = node
+        self.nodes[(coord[0], coord[1], coord[2])] = node
 
     def getNode(self, coord):
         if not self.nodes.get((coord[0], coord[1], coord[2])):
             raise ValueError("Could not find node")
-        return self.node[(coord[0], coord[1], coord[2])]
+        return self.nodes[(coord[0], coord[1], coord[2])]
 
     def findNode(self, coord):
         return (coord[0], coord[1], coord[2]) in self.nodes
