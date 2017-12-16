@@ -7,8 +7,8 @@ import openravepy
 
 #### YOUR IMPORTS GO HERE ####
 from d_star import *
-from pq import Priority_queue
-from grid import Node, Grid
+from pq import Priority_Queue
+from graph, import Node, CoorinateTranslator, Graph
 import math
 #### END OF YOUR IMPORTS ####
 
@@ -47,9 +47,10 @@ def ConvertPathToTrajectory(robot,path=[]):
 # Global Variables #
 #                  #
 ####################
-k_m = 0
 U = 0
-grid = 0
+k_m = 0
+graph = 0
+coord_translator = 0
 
 if __name__ == "__main__":
     env = Environment()
@@ -72,38 +73,39 @@ if __name__ == "__main__":
         # the active DOF are translation in X and Y and rotation about the Z axis of the base of the robot.
         robot.SetActiveDOFs([],DOFAffine.X|DOFAffine.Y|DOFAffine.RotationAxis,[0,0,1])
 
-        goalconfig = [2.6,-1.3,-pi/2]
+        o_pose = robot.GetTransform()
+        start_config = [o_pose[0][3], o_pose[1][3], 0]
+        goal_config = [2.6,-1.3,-pi/2]
+        handles = []
         start = time.clock()
         ##########################
         #                        #
         # D* Lite Implementation #
         #                        #
         ##########################
-        
-        handles = []
-        o_pose = robot.GetTransform()
-        startconfig = [o_pose[0][3], o_pose[1][3], 0]
-        grid = Grid(startconfig, goalconfig)
+        s_start = Node(start_config, np.inf, np.inf)
+        s_goal = Node(goal_config, np.inf, np.inf)
+        graph = Graph(s_start, s_goal)
+        graph.insertNode(s_goal)
+        coord_translator = CoordinateTranslator(goal_config)
 
         ##############
         #            #
         #    Main    #
         #            #
         ##############
-        s_last = grid.s_start
-        changed_flag = False
-        U, k_m = initialize()
+        s_last = s_start 
+        U, k_m = initialize(s_goal)
         computeShortestPath()
-        while np.linalg.norm(np.array(grid.s_start) - np.array(grid.s_goal)) != 0:
-            grid.s_start = grid.s_start.succ()[np.argmin([cost_plus_g(grid.s_start, suc) for suc in grid.s_start.succ()])]
+        while np.linalg.norm(np.array(graph.s_start) - np.array(graph.s_goal)) != 0:
+            graph.s_start = graph.s_start.succ()[np.argmin([cost_plus_g(graph.s_start, suc) for suc in graph.s_start.succ()])]
             ### maybe ###
-            robot.SetActiveDOFValues([grid.s_start.x, grid.s_start.y, grid.s_start.theta])
-            if changed_flag:
+            robot.SetActiveDOFValues([graph.s_start.x, graph.s_start.y, graph.s_start.theta])
+            if scanEdges(robot, env, graph.s_start):
                 # if there is edge value changed:
-                k_m += h(s_last, grid.s_start)
-                s_last = grid.s_start
-                some_path = computeShortestPath()
-                changed_flag = False
+                k_m += h(s_last, graph.s_start)
+                s_last = graph.s_start
+                computeShortestPath()
 
 
         path = [] #put your final path in this variable

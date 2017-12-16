@@ -1,57 +1,75 @@
 #!/usr/bin/env python
 #defines a basic node class
 import numpy as np
+from d_star import cost
+
+class CoordinateTranslator:
+    def __init__(self, goal_config_in):
+        self.goal_config = goal_config_in
+    
+    def coordToConfig(self, coord):
+        return [goal_config[0] + coord[0], goal_config[1] + coord[1], goal_config[2] + coord[2] * 0.5 * np.pi]
+
+    def configToCoord(self, config):
+        return [config[0] - goal_config[0], config[1] - goal_config[1], np.around((config[2] - goal_config[2]) / (0.5 * np.pi))]
 
 class Node:
-    def __init__(self,x_in,y_in,theta_in, id_in, parentid_in, g_in, rhs_in):
-        self.x = x_in
-        self.y = y_in
-        self.theta = theta_in
-        self.id = id_in
-        self.parentid = parentid_in
+    def __init__(self, coord_in, g_in, rhs_in):
+        self.x = coord_in[0]
+        self.y = coord_in[1]
+        self.rot = coord_in[2] 
         self.g = g_in
         self.rhs = rhs_in
 
-    def succ(self, grid):
-        successors = []
+    def getCoordinates(self):
+        return [self.x, self.y, self.rot]
+
+    def getNeighbors(self):
+        neighbors = []
         for i in range(-1,2):
             for j in range(-1,2):
                 for k in range(-1,2):
                     if np.linalg.norm([i,j,k]) != 0:
-                        if  self.id[0]+i >= 0 and self.id[0]+i < grid.x_grid_num \
-                            self.id[1]+j >= 0 and self.id[1]+j < grid.y_grid_num:
-                            successors.append( grid.grid[self.id[0]+i][self.id[1]+j][(self.id[2]+k) % 4])
-        return successors
-
-    def pred(self, grid):
-        return self.succ(grid)
+                        children.append([self.x + i, self.y + j, self.rot + k])
+        return neighbors
 
     def printme(self):
-        print "\tNode id", self.id,":", "x =", self.x, "y =",self.y, "theta =", self.theta, "parentid:", self.parentid
+        print "\tNode: x = ", self.x, " y =",self.y, " rot =", self.rot, " g(s) = ", self.g, "rhs(s) = ", self.rhs, " locally consistent = ", (self.g == self.rhs)
 
-class Grid:
-    def __init__(self, startconfig, goalconfig):
-        self.step_len = 0.1
-        self.x_len = 3.7
-        self.y_len = 1.7
-        # -np.pi, -np.pi/2, 0, np.pi/2
-        self.theta_num = 4
-        self.x_grid_num = int(2*self.x_len/self.step_len)
-        self.y_grid_num = int(2*self.y_len/self.step_len)
-        self.grid = []
-        for i in range(self.x_grid_num):
-            line = []
-            for j in range(self.y_grid_num):
-                line.append([ Node(-self.x_len+i*self.step_len,-self.y_len+j*self.step_len, np.pi-2*np.pi/self.theta_num*k, (i,j,k), (-1,-1,-1), np.inf, np.inf ) for k in range(self.theta_num)])
-            self.grid.append(line)
-        self.s_start = self.config_point(startconfig)
-        self.s_goal = self.config_point(goalconfig)
+class Graph:
+    # s_start_in, s_goal_in should be of Node class 
+    def __init__(self, s_start_in, s_goal_in):
+        self.s_start = s_start_in
+        self.s_goal = s_goal_in
+        self.nodes = {}
+        self.cost = {}
 
-    def angle_index(self, angle):
-        return (angle + np.pi/2*3)/np.pi*2
+    def insertNode(self, node):
+        self.setNode(node)
+        for neighbor in node.getNeighbors():
+            if not self.findCost(neighbor, node.getCoordinates()):
+                graph.setCost(node.getCoordinates(), neighbor, cost(node.getCoordinates(), neighbor))
 
-    def config_point(self, config):
-        return [int(round((config[0]+self.x_len)/self.step_len)), int(round((config[1]+self.y_len)/self.step_len)), angle_index(config[2])]
+    def setNode(self, node):
+        coord = node.getCoordinates()
+        self.node[(coord[0], coord[1], coord[2])] = node
 
-    def print_grid(self):
-        return 1
+    def getNode(self, coord):
+        if not self.nodes.get((coord[0], coord[1], coord[2])):
+            raise ValueError("Could not find node")
+        return self.node[(coord[0], coord[1], coord[2])]
+
+    def findNode(self, coord):
+        return (coord[0], coord[1], coord[2]) in self.nodes
+
+    def setCost(self, c1, c2, cost_in):
+        self.cost[((c1[0],c1[1],c1[2]),(c2[0],c2[1],c2[2]))] = cost_in
+        self.cost[((c2[0],c2[1],c2[2]),(c1[0],c1[1],c1[2]))] = cost_in
+
+    def getCost(self, c1, c2):
+        if not self.cost.get(((c1[0],c1[1],c1[2]),(c2[0],c2[1],c2[2]))):
+            raise ValueError("Could not find cost")
+        return self.cost.get(((c1[0],c1[1],c1[2]),(c2[0],c2[1],c2[2])))
+
+    def findCost(self, c1, c2):
+        return ((c1[0],c1[1],c1[2]),(c2[0],c2[1],c2[2])) in self.cost
