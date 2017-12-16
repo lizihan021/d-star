@@ -52,3 +52,6 @@ class Grid:
 
     def config_point(self, config):
         return [int(round((config[0]+self.x_len)/self.step_len)), int(round((config[1]+self.y_len)/self.step_len)), angle_index(config[2])]
+
+    def print_grid(self):
+        return 1

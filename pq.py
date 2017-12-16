@@ -2,7 +2,7 @@
 
 #### pq requires items pushed in to be unique. ###
 class Priority_Queue:
-	def __init__(self, compare = lambda x, y: (x[0] < y[0]), arr = []):
+	def __init__(self, compare = lambda x, y: (x[0] > y[0]), arr = []):
 		# [key, value]
 		self.pq = [[-1, -1]] + arr
 		self.dic = dict(zip([x[1] for x in arr],[x[0] for x in arr]))
