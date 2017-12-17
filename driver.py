@@ -44,7 +44,7 @@ def scanEdges(robot, env, node):
             for nonCollNeighbor in graph.getNode(neighbor).getNeighbors():
                 graph.setCost(nonCollNeighbor, neighbor, cost(coord_translator, graph.getNode(nonCollNeighbor), graph.getNode(neighbor)))
                 updateVertex(nonCollNeighbor)
-    return changedEdges
+    return True #changedEdges
 
 def keyCompare(lhs,rhs):
     if lhs[0] < rhs[0]:
@@ -97,15 +97,14 @@ def updateVertex(u_coord):
         U.Insert(u, calculateKey(u))
 
 def computeShortestPath(default_color):
-    print calculateKey(graph.s_start)
+    #print calculateKey(graph.s_start)
     while keyCompare(U.Top()[0], calculateKey(graph.s_start)) or graph.s_start.rhs != graph.s_start.g:
         k_old = U.Top()[0]
         u = U.Pop()[1]
         # Teal: Computed Node
-        print k_old
 
         plotPoint(coord=u.getCoordinates(), ps_in=7.0, color_in=default_color, height_in=0.1)
-        if keyCompare(k_old, calculateKey(u)):
+        if keyCompare(k_old, calculateKey(u)): # <
             if U.exist(u):
                 U.Remove(u)
             U.Insert(u, calculateKey(u))
@@ -180,8 +179,8 @@ if __name__ == "__main__":
     robot.SetActiveDOFs([],DOFAffine.X|DOFAffine.Y|DOFAffine.RotationAxis,[0,0,1])
 
     o_pose = robot.GetTransform()
-    start_config = [o_pose[0][3], o_pose[1][3], -pi/2]
-    goal_config = [2.6,-1.3,-pi]
+    start_config = [o_pose[0][3], o_pose[1][3], 0]
+    goal_config = [2.6,-1.3,-pi/2]
     ##########################
     #                        #
     # D* Lite Implementation #
@@ -235,10 +234,10 @@ if __name__ == "__main__":
         # Black: Robot path
         plotPoint(coord=graph.s_start.getCoordinates(), ps_in=7.0, color_in=[0,0,0], height_in=0.2)
         robot.SetActiveDOFValues(coord_translator.coordToConfig(graph.s_start.getCoordinates()))
-        print graph.s_start
         with env:
             if scanEdges(robot, env, graph.s_start):
                 # if there is edge value changed:
+                # k_m += cost(coord_translator, s_last.getCoordinates(), graph.s_start.getCoordinates())
                 k_m += heuristic(s_last.getCoordinates(), graph.s_start.getCoordinates())
                 s_last = graph.s_start
                 computeShortestPath(default_color)
