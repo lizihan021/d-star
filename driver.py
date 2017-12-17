@@ -24,26 +24,29 @@ def plotPoint(coord, ps_in, color_in, height_in):
 #########################
 # D Star Implementation #
 #########################
-def scanEdges(robot, env, node):
+def scanEdges(robot, env, s_last):
     changedEdges = False
-    for neighbor in node.getNeighbors():
+    for neighbor in graph.s_start.getNeighbors():
         config = coord_translator.coordToConfig(neighbor)
         robot.SetActiveDOFValues(config)
-        if env.CheckCollision(robot) and graph.getCost(node.getCoordinates(), neighbor) != np.inf: 
+        if env.CheckCollision(robot) and graph.getCost(graph.s_start.getCoordinates(), neighbor) != np.inf: 
+            if not changedEdges:
+                k_m += heuristic(s_last.getCoordinates(), graph.s_start.getCoordinates())
+            changedEdges = True
             # Red: Collision
             plotPoint(coord=neighbor, ps_in=7.0, color_in=[1,0,0], height_in=0.2)
-            changedEdges = True
             for collNeighbor in graph.getNode(neighbor).getNeighbors():
                 graph.setCost(collNeighbor, neighbor, np.inf)
-                updateVertex(collNeighbor)
-
-        if not env.CheckCollision(robot) and graph.getCost(node.getCoordinates(), neighbor) == np.inf:
+                updateVertex(graph.s_start)
+        if not env.CheckCollision(robot) and graph.getCost(graph.s_start.getCoordinates(), neighbor) == np.inf:
+            if not changedEdges:
+                k_m += heuristic(s_last.getCoordinates(), graph.s_start.getCoordinates())
+            changedEdges = True
             # Dark Teal: No longer Collision
             plotPoint(coord=neighbor, ps_in=7.0, color_in=[0,0.5,0.5], height_in=0.2)
-            changedEdges = True
             for nonCollNeighbor in graph.getNode(neighbor).getNeighbors():
                 graph.setCost(nonCollNeighbor, neighbor, cost(coord_translator, graph.getNode(nonCollNeighbor), graph.getNode(neighbor)))
-                updateVertex(nonCollNeighbor)
+                updateVertex(graph.s_start)
     return changedEdges
 
 def keyCompare(lhs,rhs):
@@ -187,16 +190,16 @@ if __name__ == "__main__":
     # D* Lite Implementation #
     #                        #
     ##########################
-    print "Start Configuration: ", start_config
     coord_translator = CoordinateTranslator(goal_config)
     s_start = Node(coord_translator.configToCoord(start_config), np.inf, np.inf)
-    print "Relative StartCoordinates: ", s_start.getCoordinates()
-    print "Goal Configuration: ", goal_config
     s_goal = Node([0,0,0], np.inf, np.inf)
-    print "Relative Goal Coordinates: ", s_goal.getCoordinates()
     graph = Graph(s_start, s_goal)
     graph.insertNode(s_start, coord_translator)
     graph.insertNode(s_goal, coord_translator)
+    print "Start Configuration: ", start_config
+    print "Relative StartCoordinates: ", s_start.getCoordinates()
+    print "Goal Configuration: ", goal_config
+    print "Relative Goal Coordinates: ", s_goal.getCoordinates()
 
     default_color=[0,1,1]
 
@@ -237,9 +240,8 @@ if __name__ == "__main__":
         robot.SetActiveDOFValues(coord_translator.coordToConfig(graph.s_start.getCoordinates()))
         print graph.s_start
         with env:
-            if scanEdges(robot, env, graph.s_start):
+            if scanEdges(robot, env, s_last):
                 # if there is edge value changed:
-                k_m += heuristic(s_last.getCoordinates(), graph.s_start.getCoordinates())
                 s_last = graph.s_start
                 computeShortestPath(default_color)
 
