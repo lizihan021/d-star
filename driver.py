@@ -84,13 +84,6 @@ def initialize(s_goal):
     return U, k_m
 
 def updateVertex(u_coord):
-    if not graph.findNode(u_coord):
-        tmp = Node(u_coord, np.inf, np.inf)
-        graph.insertNode(tmp, coord_translator)
-    for neighbor in graph.getNode(u_coord).getNeighbors():
-        if not graph.findNode(neighbor):
-            tmp = Node(neighbor, np.inf, np.inf)
-            graph.insertNode(tmp, coord_translator)
     u = graph.getNode(u_coord)
     if (u_coord != graph.s_goal.getCoordinates()):
         u.rhs = min([ cost_plus_g(u_coord, neighbor) for neighbor in u.getNeighbors()])
@@ -194,8 +187,8 @@ if __name__ == "__main__":
     s_start = Node(coord_translator.configToCoord(start_config), np.inf, np.inf)
     s_goal = Node([0,0,0], np.inf, np.inf)
     graph = Graph(s_start, s_goal)
-    graph.insertNode(s_start, coord_translator)
-    graph.insertNode(s_goal, coord_translator)
+    graph.insertNode(s_start)
+    graph.insertNode(s_goal)
     print "Start Configuration: ", start_config
     print "Relative StartCoordinates: ", s_start.getCoordinates()
     print "Goal Configuration: ", goal_config

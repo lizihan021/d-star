@@ -42,17 +42,18 @@ class Node:
 
 class Graph:
     # s_start_in, s_goal_in should be of Node class 
-    def __init__(self, s_start_in, s_goal_in):
+    def __init__(self, s_start_in, s_goal_in, coord_translator_in):
         self.s_start = s_start_in
         self.s_goal = s_goal_in
         self.nodes = {}
         self.cost = {}
+        self.coord_translator = coord_translator_in
 
-    def insertNode(self, node, coord_translator):
+    def insertNode(self, node):
         self.setNode(node)
         for neighbor in node.getNeighbors():
             if not self.findCost(neighbor, node.getCoordinates()):
-                self.setCost(node.getCoordinates(), neighbor, cost(coord_translator, node.getCoordinates(), neighbor))
+                self.setCost(node.getCoordinates(), neighbor, cost(self.coord_translator, node.getCoordinates(), neighbor))
 
     def setNode(self, node):
         coord = node.getCoordinates()
@@ -60,7 +61,8 @@ class Graph:
 
     def getNode(self, coord):
         if not self.nodes.get((coord[0], coord[1], coord[2])):
-            raise ValueError("Could not find node")
+            temp = Node(coord, np.inf, np.inf)
+            self.insertNode(temp)
         return self.nodes[(coord[0], coord[1], coord[2])]
 
     def findNode(self, coord):
