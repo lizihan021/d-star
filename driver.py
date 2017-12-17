@@ -22,6 +22,8 @@ def scanEdges(robot, env, node):
         config = coord_translator.coordToConfig(neighbor)
         robot.SetActiveDOFValues(config)
         if env.CheckCollision(robot) and graph.getCost(node.getCoordinates(), neighbor) != np.inf: 
+            # Red: Collision
+            handles.append(env.plot3(points=np.array([neighbor[0], neighbor[1], 0.7],pointsize=15.0,colors=[1,0,0])))
             changedEdges = True
             for collNeighbor in graph.getNode(neighbor).getNeighbors():
                 graph.setCost(collNeighbor, neighbor, np.inf)
@@ -89,6 +91,8 @@ def computeShortestPath():
     while keyCompare(U.Top()[0], calculateKey(graph.s_start)) or graph.s_start.rhs != graph.s_start.g:
         k_old = U.Top()[0]
         u = U.Pop()[1]
+        # Teal: Computed Node
+        handles.append(env.plot3(points=np.array([u.getCoordinates()[0], u.getCoordinates()[1], 0.7],pointsize=15.0,colors=[0,1,1])))
         if keyCompare(k_old, calculateKey(u)):
             U.Insert(u, calculateKey(u))
         elif u.g > u.rhs:
@@ -131,11 +135,15 @@ def ConvertPathToTrajectory(robot,path=[]):
     planningutils.RetimeAffineTrajectory(traj,maxvelocities=ones(3),maxaccelerations=5*ones(3))
     return traj
 
+####################
+# Global Variables #
+####################
 
 U = 0
 k_m = 0
 graph = 0
 coord_translator = 0
+handles = []
 
 if __name__ == "__main__":
     env = Environment()
@@ -161,7 +169,6 @@ if __name__ == "__main__":
         o_pose = robot.GetTransform()
         start_config = [o_pose[0][3], o_pose[1][3], 0]
         goal_config = [2.6,-1.3,-pi/2]
-        handles = []
         start = time.clock()
         ##########################
         #                        #
@@ -176,7 +183,11 @@ if __name__ == "__main__":
         graph = Graph(s_start, s_goal)
         graph.insertNode(s_goal, coord_translator)
 
-
+        # Blue: Start Point
+        handles.append(env.plot3(points=np.array([s_start.getCoordinates()[0], s_start.getCoordinates()[1], 0.7],pointsize=15.0,colors=[0,0,1])))
+        # Green: End Point
+        handles.append(env.plot3(points=np.array([s_goal.getCoordinates()[0], s_goal.getCoordinates()[1], 0.7],pointsize=15.0,colors=[0,1,0])))
+        raw_input("Press space to continue")
         ##############
         #            #
         #    Main    #
@@ -195,7 +206,6 @@ if __name__ == "__main__":
                 k_m += h(s_last, graph.s_start)
                 s_last = graph.s_start
                 computeShortestPath()
-
 
         path = [] #put your final path in this variable
 
