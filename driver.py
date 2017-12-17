@@ -47,7 +47,7 @@ def scanEdges(robot, env, s_last, k_m):
             for nonCollNeighbor in graph.getNode(neighbor).getNeighbors():
                 graph.setCost(nonCollNeighbor, neighbor, cost(coord_translator, graph.getNode(nonCollNeighbor), graph.getNode(neighbor)))
                 updateVertex(graph.s_start.getCoordinates())
-    return changedEdges, k_m
+    return True, k_m #changedEdges, k_m
 
 def keyCompare(lhs,rhs):
     if lhs[0] < rhs[0]:
@@ -183,7 +183,7 @@ if __name__ == "__main__":
     coord_translator = CoordinateTranslator(goal_config)
     s_start = Node(coord_translator.configToCoord(start_config), np.inf, np.inf)
     s_goal = Node([0,0,0], np.inf, np.inf)
-    graph = Graph(s_start, s_goal)
+    graph = Graph(s_start, s_goal, coord_translator)
     graph.insertNode(s_start)
     graph.insertNode(s_goal)
     print "Start Configuration: ", start_config
