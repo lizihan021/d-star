@@ -187,7 +187,7 @@ if __name__ == "__main__":
         handles.append(env.plot3(points=np.array([s_start.getCoordinates()[0], s_start.getCoordinates()[1], 0.7],pointsize=15.0,colors=[0,0,1])))
         # Green: End Point
         handles.append(env.plot3(points=np.array([s_goal.getCoordinates()[0], s_goal.getCoordinates()[1], 0.7],pointsize=15.0,colors=[0,1,0])))
-        raw_input("Press space to continue")
+        raw_input("Press enter to continue")
         ##############
         #            #
         #    Main    #
