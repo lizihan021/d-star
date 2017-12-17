@@ -7,6 +7,7 @@ import openravepy
 from pq import Priority_Queue
 from graph import *
 import math
+import cPickle as pickle
 #### END OF YOUR IMPORTS ####
 
 if not __openravepy_build_doc__:
@@ -23,7 +24,8 @@ def scanEdges(robot, env, node):
         robot.SetActiveDOFValues(config)
         if env.CheckCollision(robot) and graph.getCost(node.getCoordinates(), neighbor) != np.inf: 
             # Red: Collision
-            handles.append(env.plot3(points=np.array([neighbor[0], neighbor[1], 0.7],pointsize=15.0,colors=[1,0,0])))
+            tmp = coord_translator.coordToConfig(neighbor)
+            handles.append(env.plot3(points=np.array([tmp[0], tmp[1], 0.2]),pointsize=7.0,colors=[1,0,0]))
             changedEdges = True
             for collNeighbor in graph.getNode(neighbor).getNeighbors():
                 graph.setCost(collNeighbor, neighbor, np.inf)
@@ -94,7 +96,8 @@ def computeShortestPath():
         k_old = U.Top()[0]
         u = U.Pop()[1]
         # Teal: Computed Node
-        handles.append(env.plot3(points=np.array([u.getCoordinates()[0], u.getCoordinates()[1], 0.7],pointsize=15.0,colors=[0,1,1])))
+        tmp = coord_translator.coordToConfig(u.getCoordinates())
+        handles.append(env.plot3(points=np.array([tmp[0], tmp[1], 0.1]),pointsize=7.0,colors=[0,1,1]))
         if keyCompare(k_old, calculateKey(u)):
             U.Insert(u, calculateKey(u))
         elif u.g > u.rhs:
@@ -103,10 +106,9 @@ def computeShortestPath():
                 updateVertex(s)
             if u == graph.s_start:
                 print u
-                print graph
         else:
             u.g = np.inf
-            updateVertex(u)
+            updateVertex(u.getCoordinates())
             for s in u.getNeighbors():
                 updateVertex(s)
 
@@ -174,26 +176,31 @@ if __name__ == "__main__":
         o_pose = robot.GetTransform()
         start_config = [o_pose[0][3], o_pose[1][3], 0]
         goal_config = [2.6,-1.3,-pi/2]
-        start = time.clock()
         ##########################
         #                        #
         # D* Lite Implementation #
         #                        #
         ##########################
-        print start_config
+        print "Start Configuration: ", start_config
         coord_translator = CoordinateTranslator(goal_config)
         s_start = Node(coord_translator.configToCoord(start_config), np.inf, np.inf)
-        print s_start.getCoordinates()
+        print "Relative StartCoordinates: ", s_start.getCoordinates()
+        print "Goal Configuration: ", goal_config
         s_goal = Node([0,0,0], np.inf, np.inf)
+        print "Relative Goal Coordinates: ", s_start.getCoordinates()
         graph = Graph(s_start, s_goal)
         graph.insertNode(s_goal, coord_translator)
         graph.insertNode(s_start, coord_translator)
 
         # Blue: Start Point
-        handles.append(env.plot3(points=np.array([s_start.getCoordinates()[0], s_start.getCoordinates()[1], 0.7],pointsize=15.0,colors=[0,0,1])))
+        tmp = coord_translator.coordToConfig(s_start.getCoordinates())
+        handles.append(env.plot3(points=np.array([tmp[0], tmp[1], 0.3]),pointsize=7.0,colors=[0,0,1]))
         # Green: End Point
-        handles.append(env.plot3(points=np.array([s_goal.getCoordinates()[0], s_goal.getCoordinates()[1], 0.7],pointsize=15.0,colors=[0,1,0])))
+        tmp = coord_translator.coordToConfig(s_goal.getCoordinates())
+        handles.append(env.plot3(points=np.array([tmp[0], tmp[1], 0.3]),pointsize=7.0,colors=[0,1,0]))
+        # Start Timer
         raw_input("Press enter to continue")
+        start = time.clock()
         ##############
         #            #
         #    Main    #
@@ -201,15 +208,22 @@ if __name__ == "__main__":
         ##############
         s_last = s_start 
         U, k_m = initialize(s_goal)
-        computeShortestPath()
+        # computeShortestPath()
+        # pickle.dump( {"a": U, "b": graph}, open( "save.p", "wb" ) )
+        tmp = pickle.load( open( "save.p", "rb" ) )
+        U, graph = tmp["a"], tmp["b"]
+
         while np.linalg.norm(np.array(graph.s_start.getCoordinates()) - np.array(graph.s_goal.getCoordinates())) != 0:
-            graph.s_start = graph.getNode(np.argmin([cost_plus_g(graph.s_start.getCoordinates(), neighbor) for neighbor in graph.s_start.getNeighbors()]))
-            ### maybe ###
-            print [graph.s_start.x, graph.s_start.y, graph.s_start.theta]
-            robot.SetActiveDOFValues([graph.s_start.x, graph.s_start.y, graph.s_start.theta])
+            graph.s_start = graph.getNode(graph.s_start.getNeighbors()[np.argmin([cost_plus_g(graph.s_start.getCoordinates(), neighbor) for neighbor in graph.s_start.getNeighbors()])])
+            # Black: Robot path
+            tmp = coord_translator.coordToConfig(graph.s_start.getCoordinates())
+            handles.append(env.plot3(points=np.array([tmp[0], tmp[1], 0.2]),pointsize=7.0,colors=[0,0,0]))
+            tmp = coord_translator.coordToConfig(graph.s_start.getCoordinates())
+            robot.SetActiveDOFValues(tmp)
+
             if scanEdges(robot, env, graph.s_start):
                 # if there is edge value changed:
-                k_m += h(s_last, graph.s_start)
+                k_m += heuristic(s_last.getCoordinates(), graph.s_start.getCoordinates())
                 s_last = graph.s_start
                 computeShortestPath()
 
