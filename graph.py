@@ -37,8 +37,8 @@ class Node:
                         neighbors.append([self.x + i, self.y + j, (self.rot + k) % 4])
         return neighbors
 
-    def printme(self):
-        print "\tNode: x = ", self.x, " y =",self.y, " rot =", self.rot, " g(s) = ", self.g, "rhs(s) = ", self.rhs, " locally consistent = ", (self.g == self.rhs)
+    def __str__(self):
+        return "\tNode: x = "+ str(self.x)+ " y = "+str(self.y)+ " rot = "+ str(self.rot)+ " g(s) = "+ str(self.g)+ " rhs(s) = "+ str(self.rhs)
 
 class Graph:
     # s_start_in, s_goal_in should be of Node class 
@@ -77,3 +77,6 @@ class Graph:
 
     def findCost(self, c1, c2):
         return ((c1[0],c1[1],c1[2]),(c2[0],c2[1],c2[2])) in self.cost
+
+    def __str__(self):
+        return str(self.nodes) +"\n"+ str(self.cost)

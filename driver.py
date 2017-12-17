@@ -81,20 +81,26 @@ def updateVertex(u_coord):
     if (u_coord != graph.s_goal.getCoordinates()):
         u.rhs = min([ cost_plus_g(u_coord, neighbor) for neighbor in u.getNeighbors()])
     if U.exist(u):
+        # print "remove: ", u
         U.Remove(u)
     if u.g != u.rhs:
         U.Insert(u, calculateKey(u))
+        # print u
 
 def computeShortestPath():
     while keyCompare(U.Top()[0], calculateKey(graph.s_start)) or graph.s_start.rhs != graph.s_start.g:
         k_old = U.Top()[0]
         u = U.Pop()[1]
+
         if keyCompare(k_old, calculateKey(u)):
             U.Insert(u, calculateKey(u))
         elif u.g > u.rhs:
             u.g = u.rhs
             for s in u.getNeighbors():
                 updateVertex(s)
+            if u == graph.s_start:
+                print u
+                print graph
         else:
             u.g = np.inf
             updateVertex(u)
@@ -175,6 +181,7 @@ if __name__ == "__main__":
         s_goal = Node([0,0,0], np.inf, np.inf)
         graph = Graph(s_start, s_goal)
         graph.insertNode(s_goal, coord_translator)
+        graph.insertNode(s_start, coord_translator)
 
 
         ##############
@@ -185,7 +192,7 @@ if __name__ == "__main__":
         s_last = s_start 
         U, k_m = initialize(s_goal)
         computeShortestPath()
-        while np.linalg.norm(np.array(graph.s_start) - np.array(graph.s_goal)) != 0:
+        while np.linalg.norm(np.array(graph.s_start.getCoordinates()) - np.array(graph.s_goal.getCoordinates())) != 0:
             graph.s_start = graph.getNode(np.argmin([cost_plus_g(graph.s_start.getCoordinates(), neighbor) for neighbor in graph.s_start.getNeighbors()]))
             ### maybe ###
             print [graph.s_start.x, graph.s_start.y, graph.s_start.theta]
