@@ -47,7 +47,7 @@ def scanEdges(robot, env, s_last, k_m):
             for nonCollNeighbor in graph.getNode(neighbor).getNeighbors():
                 graph.setCost(nonCollNeighbor, neighbor, cost(coord_translator, graph.getNode(nonCollNeighbor), graph.getNode(neighbor)))
                 updateVertex(graph.s_start.getCoordinates())
-    return True, k_m #changedEdges, k_m
+    return changedEdges, k_m #True, k_m #changedEdges, k_m
 
 def keyCompare(lhs,rhs):
     if lhs[0] < rhs[0]:
@@ -74,7 +74,7 @@ def cost_plus_g(c1, c2):
     return graph.getCost(c1, c2) + graph.getNode(c2).g
 
 def calculateKey(s): ### maybe change grid and k_m to global ###
-    return [min([s.g, s.rhs]) + heuristic(graph.s_start.getCoordinates(), s.getCoordinates()) + k_m, min([s.g, s.rhs])]
+    return [min([s.g, s.rhs]) + heuristic(graph.s_start_no_change.getCoordinates(), s.getCoordinates()) + k_m, min([s.g, s.rhs])]
 
 def initialize(s_goal):
     U = Priority_Queue(compare=pqComparator)

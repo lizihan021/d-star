@@ -44,6 +44,7 @@ class Graph:
     # s_start_in, s_goal_in should be of Node class 
     def __init__(self, s_start_in, s_goal_in, coord_translator_in):
         self.s_start = s_start_in
+        self.s_start_no_change = s_start_in
         self.s_goal = s_goal_in
         self.nodes = {}
         self.cost = {}
