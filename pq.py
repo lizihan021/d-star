@@ -1,8 +1,17 @@
 #!/usr/bin/env python
 
 #### pq requires items pushed in to be unique. ###
+def pqComparator(lhs,rhs):
+    if lhs[0][0] > rhs[0][0]:
+        return True
+    elif lhs[0][0] == rhs[0][0]:
+        return lhs[0][1] > rhs[0][1]
+    else:
+        return False
+
+
 class Priority_Queue:
-	def __init__(self, compare = lambda x, y: (x[0] < y[0]), arr = []):
+	def __init__(self, compare, arr = []):
 		# [key, value]
 		self.pq = [[-1, -1]] + arr
 		self.dic = dict(zip([x[1] for x in arr],[x[0] for x in arr]))
@@ -14,14 +23,14 @@ class Priority_Queue:
 	def Top(self):
 		if self.empty():
 			raise ValueError("Cannot get top(), Queue is empty.")
-		return self.pq[0][0]
+		return self.pq[1]
 
 	def Pop(self):
 		if self.empty():
 			raise ValueError("Cannot get top(), Queue is empty.")
 		self.pq[1], self.pq[-1] = self.pq[-1], self.pq[1]
 		victim = self.pq.pop()
-		self.dic.pop(victem[1], "dict value error")
+		self.dic.pop(victim[1], "dict value error")
 		self.fix_down(1)
 		return victim
 
@@ -78,18 +87,20 @@ class Priority_Queue:
 		return self.pq.__str__()
 
 # if __name__ == "__main__":
-# 	pq = Priority_queue()
-# 	pq.push("item", 1)
-# 	pq.push("item2", 2)
-# 	pq.push("item3", 7)
-# 	pq.push("item4", 6)
-# 	pq.push("item4", 6)
-# 	pq.push("item4", 6)
-# 	pq.push("item4", 6)
-# 	pq.push("item5", 4)
-# 	pq.push("item6", 9)
-# 	pq.pop()
-# 	pq.pop()
-# 	pq.delete("item")
-# 	pq.delete("item5")
+# 	pq = Priority_Queue(pqComparator)
+# 	pq.Insert("item", [1,2])
+# 	pq.Insert("item2", [2,2])
+# 	pq.Insert("item3", [7,2])
+# 	pq.Insert("item4", [6,2])
+# 	pq.Insert("item4", [6,2])
+# 	pq.Insert("item4", [6,2])
+# 	pq.Insert("item4", [6,2])
+# 	pq.Insert("item5", [4,2])
+# 	pq.Insert("item6", [9,2])
+# 	print pq
+# 	print pq.Pop()
+# 	print pq
+# 	print pq.Pop()
+# 	pq.Remove("item")
+# 	pq.Remove("item5")
 # 	print pq
