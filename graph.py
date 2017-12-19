@@ -33,7 +33,7 @@ class Node:
         for i in range(-1,2):
             for j in range(-1,2):
                 for k in range(-1,2):
-                    if np.linalg.norm([i,j,k]) == 1: # for 4 Connected, == 1, for 8 Connected, != 0
+                    if np.linalg.norm([i,j,k]) == 1 and self.y + j > -7 and self.x + i > -66 and self.x + i < 15 and self.y + j < 35: # for 4 Connected, == 1, for 8 Connected, != 0
                         neighbors.append([self.x + i, self.y + j, (self.rot + k) % 4])
         return neighbors
 

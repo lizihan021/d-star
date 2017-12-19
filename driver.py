@@ -18,8 +18,17 @@ if not __openravepy_build_doc__:
 ####################
 
 def plotPoint(coord, ps_in, color_in, height_in):
-    tmp = coord_translator.coordToConfig(coord)
-    handles.append(env.plot3(points=np.array([tmp[0], tmp[1], height_in]),pointsize=ps_in,colors=color_in))
+    co_str = str(coord)
+    col_str = str(color_in)
+    if not co_str in plot_check:
+        plot_check[co_str] = col_str
+        tmp = coord_translator.coordToConfig(coord)
+        handles.append(env.plot3(points=np.array([tmp[0], tmp[1], height_in]),pointsize=ps_in,colors=color_in))
+    else:
+        if plot_check[co_str] != col_str:
+            plot_check[co_str] = col_str
+            tmp = coord_translator.coordToConfig(coord)
+            handles.append(env.plot3(points=np.array([tmp[0], tmp[1], height_in]),pointsize=ps_in,colors=color_in))
 
 #########################
 # D Star Implementation #
@@ -34,7 +43,7 @@ def scanEdges(robot, env, s_last, k_m):
                 k_m += heuristic(s_last.getCoordinates(), graph.s_start.getCoordinates())
             changedEdges = True
             # Red: Collision
-            plotPoint(coord=neighbor, ps_in=7.0, color_in=[1,0,0], height_in=0.2)
+            plotPoint(coord=neighbor, ps_in=4.0, color_in=[1,0,0], height_in=0.2)
             for collNeighbor in graph.getNode(neighbor).getNeighbors():
                 graph.setCost(collNeighbor, neighbor, np.inf)
                 updateVertex(graph.s_start.getCoordinates())
@@ -43,7 +52,7 @@ def scanEdges(robot, env, s_last, k_m):
                 k_m += heuristic(s_last.getCoordinates(), graph.s_start.getCoordinates())
             changedEdges = True
             # Dark Teal: No longer Collision
-            plotPoint(coord=neighbor, ps_in=7.0, color_in=[0,0.5,0.5], height_in=0.2)
+            plotPoint(coord=neighbor, ps_in=4.0, color_in=[0,0.5,0.5], height_in=0.2)
             for nonCollNeighbor in graph.getNode(neighbor).getNeighbors():
                 graph.setCost(nonCollNeighbor, neighbor, cost(coord_translator, graph.getNode(nonCollNeighbor), graph.getNode(neighbor)))
                 updateVertex(graph.s_start.getCoordinates())
@@ -77,6 +86,12 @@ def calculateKey(s): ### maybe change grid and k_m to global ###
     return [min([s.g, s.rhs]) + heuristic(graph.s_start_no_change.getCoordinates(), s.getCoordinates()) + k_m, min([s.g, s.rhs])]
 
 def initialize(s_goal):
+    # for i in range(-63,13):
+    #     for j in range(-4,33):
+    #         for k in range(0,3):
+    #             if [i,j,k] != graph.s_start.getCoordinates() and [i,j,k] != graph.s_goal.getCoordinates():
+    #                 temp = Node((i,j,k), np.inf, np.inf)
+    #                 graph.insertNode(temp)
     U = Priority_Queue(compare=pqComparator)
     k_m = 0
     s_goal.rhs = 0
@@ -99,7 +114,7 @@ def computeShortestPath(default_color):
         u = U.Pop()[1]
         # Teal: Computed Node
 
-        plotPoint(coord=u.getCoordinates(), ps_in=7.0, color_in=default_color, height_in=0.1)
+        plotPoint(coord=u.getCoordinates(), ps_in=4.0, color_in=default_color, height_in=0.1)
         if keyCompare(k_old, calculateKey(u)): # <
             U.Insert(u, calculateKey(u))
         elif u.g > u.rhs:
@@ -125,7 +140,7 @@ def tuckarms(env,robot):
     with env:
         jointnames = ['l_shoulder_lift_joint','l_elbow_flex_joint','l_wrist_flex_joint','r_shoulder_lift_joint','r_elbow_flex_joint','r_wrist_flex_joint']
         robot.SetActiveDOFs([robot.GetJoint(name).GetDOFIndex() for name in jointnames])
-        robot.SetActiveDOFValues([1.29023451,-2.32099996,-0.69800004,1.27843491,-2.32100002,-0.69799996]);
+        robot.SetActiveDOFValues([1.29023451,-2.32099996,-0.69800004,1.27843491,-1.32100002,-0.69799996]);
         robot.GetController().SetDesired(robot.GetDOFValues());
     waitrobot(robot)
 
@@ -151,6 +166,7 @@ k_m = 0
 graph = 0
 coord_translator = 0
 handles = []
+plot_check = {}
 
 if __name__ == "__main__":
     env = Environment()
@@ -215,19 +231,22 @@ if __name__ == "__main__":
     default_color=[1,1,0]
 
     table6 = env.GetBodyFromEnvironmentId(6)
-    # table7 = env.GetBodyFromEnvironmentId(7)
+    table7 = env.GetBodyFromEnvironmentId(7)
     new_pose6 = table6.GetTransform()
     new_pose6[0][3] = 0
-    # new_pose7 = table7.GetTransform()
-    # new_pose7[0][3] = 0
+    new_pose7 = table7.GetTransform()
+    new_pose7[0][3] = 2
+    new_pose7[1][3] = 0
     table6.SetTransform(new_pose6)
-    # table7.SetTransform(new_pose7)
+    table7.SetTransform(new_pose7)
+
+    previous = graph.s_start
 
     while np.linalg.norm(np.array(graph.s_start.getCoordinates()) - np.array(graph.s_goal.getCoordinates())) != 0:
         graph.s_start = graph.getNode(graph.s_start.getNeighbors()[np.argmin([cost_plus_g(graph.s_start.getCoordinates(), neighbor) for neighbor in graph.s_start.getNeighbors()])])
         # Black: Robot path
-        plotPoint(coord=graph.s_start.getCoordinates(), ps_in=7.0, color_in=[0,0,0], height_in=0.2)
-        robot.SetActiveDOFValues(coord_translator.coordToConfig(graph.s_start.getCoordinates()))
+        #robot.SetActiveDOFValues(coord_translator.coordToConfig(graph.s_start.getCoordinates()))
+        path = [coord_translator.coordToConfig(graph.s_start.getCoordinates()), coord_translator.coordToConfig(previous.getCoordinates())]
         with env:
             newEdges, k_m = scanEdges(robot, env, s_last, k_m)
             if newEdges:
@@ -235,8 +254,14 @@ if __name__ == "__main__":
                 # k_m += cost(coord_translator, s_last.getCoordinates(), graph.s_start.getCoordinates())
                 s_last = graph.s_start
                 computeShortestPath(default_color)
+        plotPoint(coord=graph.s_start.getCoordinates(), ps_in=5.0, color_in=[0,0,0], height_in=0.2)
+        traj = ConvertPathToTrajectory(robot, path[::-1])
+        if traj != None:
+            robot.GetController().SetPath(traj)
+        waitrobot(robot)
+        previous = graph.s_start
 
-    path = [] #put your final path in this variable
+    
 
      #### End D* Lite Implementation  ###
     end = time.clock()
