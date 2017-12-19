@@ -35,7 +35,7 @@ def ConvertPathToTrajectory(robot,path=[]):
     for i in range(0,len(path)):
         traj.Insert(i,numpy.array(path[i]))
     # Move Robot Through Trajectory
-    planningutils.RetimeAffineTrajectory(traj,maxvelocities=ones(3),maxaccelerations=5*ones(3))
+    planningutils.RetimeAffineTrajectory(traj,maxvelocities=2*np.ones(3),maxaccelerations=7*np.ones(3))
     return traj
 
 ####################
@@ -104,6 +104,8 @@ def checkCollision(robot, env):
         if coll and not node.coll:
             changed = True
             node.coll = True
+            node.g = np.inf
+            node.rhs = np.inf
             changed_n_1.append(node)
             plotPoint(node, 5, [1,0,0], 0.1)
         elif not coll and node.coll:
@@ -111,7 +113,7 @@ def checkCollision(robot, env):
             node.coll = False
             changed_n_1.append(node)
             changed_n.append(node)
-    # changed_n.append(grid.start_n)
+    changed_n.append(grid.start_n)
     for node in changed_n_1:
         if node.coll:
             for succ in node.succ(grid):
@@ -134,6 +136,8 @@ def computeShortestPath():
     while keyCompare(U.Top()[0], calculateKey(grid.start_n)) or grid.start_n.rhs != grid.start_n.g:
         k_old = U.Top()[0]
         u = getNode(U.Pop()[1])
+        if u.coll:
+            continue
         if keyCompare(k_old, calculateKey(u)):
             U.Insert(u.j_id(), calculateKey(u))
         elif u.g > u.rhs:
@@ -166,6 +170,7 @@ if __name__ == "__main__":
         # the active DOF are translation in X and Y and rotation about the Z axis of the base of the robot.
     robot.SetActiveDOFs([],DOFAffine.X|DOFAffine.Y|DOFAffine.RotationAxis,[0,0,1])
     goalconfig = [2.6,-1.3,-np.pi/2]
+    raw_input("Press enter to continue")
     start = time.clock()
     ##########################
     # D* Lite Implementation #
@@ -182,23 +187,37 @@ if __name__ == "__main__":
     U, k_m = initialize()
     computeShortestPath()
 
+    table4 = env.GetBodyFromEnvironmentId(4)
+    new_pose4 = table4.GetTransform()
 
     table6 = env.GetBodyFromEnvironmentId(6)
-    table7 = env.GetBodyFromEnvironmentId(7)
     new_pose6 = table6.GetTransform()
     new_pose6[0][3] = 0
+    table6.SetTransform(new_pose6)
+
+    table7 = env.GetBodyFromEnvironmentId(7)
     new_pose7 = table7.GetTransform()
     new_pose7[0][3] = 2
-    new_pose7[1][3] = 0
-    table6.SetTransform(new_pose6)
+    new_pose7[1][3] = 0.5
     table7.SetTransform(new_pose7)
-
+    count = 0
+    previous = [grid.start_n.x, grid.start_n.y, grid.start_n.theta]
 
     while grid.start_n != grid.goal_n:
         grid.start_n = grid.start_n.succ(grid)[np.argmin([cost_plus_g(grid.start_n, suc) for suc in grid.start_n.succ(grid)])]
         ### maybe ###
         #print grid.start_n.id, grid.start_n.theta
-        robot.SetActiveDOFValues([grid.start_n.x, grid.start_n.y, grid.start_n.theta])
+        #robot.SetActiveDOFValues([grid.start_n.x, grid.start_n.y, grid.start_n.theta])
+
+        path = [[grid.start_n.x, grid.start_n.y, grid.start_n.theta], previous]
+        traj = ConvertPathToTrajectory(robot, path[::-1])
+        if traj != None:
+            robot.GetController().SetPath(traj)
+        waitrobot(robot)
+
+        #grid.printme()
+        previous = [grid.start_n.x, grid.start_n.y, grid.start_n.theta]
+        count += 1
         with env:
             flag, changed_n = checkCollision(robot, env)
             if flag:
@@ -210,8 +229,24 @@ if __name__ == "__main__":
                     updateVertex(node)
                 computeShortestPath()
         plotPoint(grid.start_n, 5, [0,0,0], 0.1)
+        if count == 200:
+            new_pose6[0][3] = 3
+            table6.SetTransform(new_pose6)
+        if count == 550:
+            new_pose6[0][3] = 0
+            table6.SetTransform(new_pose6)
+            new_pose7[0][3] = 0
+            new_pose7[1][3] = 1
+            table7.SetTransform(new_pose7)
+        if count == 800:
+            new_pose4[0][3] = 1.5
+            new_pose4[1][3] = -0.5
+            table4.SetTransform(new_pose4)
+            new_pose7[0][3] = 2.2
+            new_pose7[1][3] = 0.3
+            table7.SetTransform(new_pose7)
 
-
+    print count
     path = [] #put your final path in this variable
 
      #### End D* Lite Implementatio  ###
