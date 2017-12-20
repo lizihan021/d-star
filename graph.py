@@ -51,10 +51,11 @@ class Graph:
         self.coord_translator = coord_translator_in
 
     def insertNode(self, node):
-        self.setNode(node)
-        for neighbor in node.getNeighbors():
-            if not self.findCost(neighbor, node.getCoordinates()):
-                self.setCost(node.getCoordinates(), neighbor, cost(self.coord_translator, node.getCoordinates(), neighbor))
+        if not self.findNode(node.getCoordinates()):
+            self.setNode(node)
+            for neighbor in node.getNeighbors():
+                if not self.findCost(neighbor, node.getCoordinates()):
+                    self.setCost(node.getCoordinates(), neighbor, cost(self.coord_translator, node.getCoordinates(), neighbor))
 
     def setNode(self, node):
         coord = node.getCoordinates()

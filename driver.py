@@ -38,7 +38,7 @@ def scanEdges(robot, env, s_last, k_m):
     for neighbor in graph.s_start.getNeighbors():
         config = coord_translator.coordToConfig(neighbor)
         robot.SetActiveDOFValues(config)
-        if env.CheckCollision(robot) and graph.getCost(graph.s_start.getCoordinates(), neighbor) != np.inf: 
+        if env.CheckCollision(robot) and graph.getCost(graph.s_start.getCoordinates(), neighbor) != np.inf:
             if not changedEdges:
                 k_m += heuristic(s_last.getCoordinates(), graph.s_start.getCoordinates())
             changedEdges = True
