@@ -133,15 +133,7 @@ if __name__ == "__main__":
             else:
                 points_plot.append((0, [this_node.x, this_node.y,0]))
         
-        table6 = env.GetBodyFromEnvironmentId(6)
-        table7 = env.GetBodyFromEnvironmentId(7)
-        new_pose6 = table6.GetTransform()
-        new_pose6[0][3] = 0
-        new_pose7 = table7.GetTransform()
-        new_pose7[0][3] = 2
-        new_pose7[1][3] = 0
-        table6.SetTransform(new_pose6)
-        table7.SetTransform(new_pose7)
+        
 
         o_pose = robot.GetTransform()
         startconfig = [o_pose[0][3], o_pose[1][3], 0]
@@ -171,6 +163,16 @@ if __name__ == "__main__":
             next_p = next_p[1]
             # print(next_p)
         print("final cost", f_cost)
+        raw_input("Press enter to continue")
+        table6 = env.GetBodyFromEnvironmentId(6)
+        table7 = env.GetBodyFromEnvironmentId(7)
+        new_pose6 = table6.GetTransform()
+        new_pose6[0][3] = 0
+        new_pose7 = table7.GetTransform()
+        new_pose7[0][3] = 2
+        new_pose7[1][3] = 0
+        table6.SetTransform(new_pose6)
+        table7.SetTransform(new_pose7)
         #### Draw the X and Y components of the configurations explored by your algorithm
 
  	path = [] #put your final path in this variable
